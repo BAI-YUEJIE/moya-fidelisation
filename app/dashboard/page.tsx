@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import QRCodeDisplay from '@/components/QRCodeDisplay'
 
 type Profile = {
   name: string
   points: number
+  is_admin: boolean
 }
 
 export default function DashboardPage() {
@@ -29,7 +31,7 @@ export default function DashboardPage() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('name, points')
+        .select('name, points, is_admin')
         .eq('id', user.id)
         .single()
 
@@ -62,6 +64,15 @@ export default function DashboardPage() {
         </div>
 
         <QRCodeDisplay userId={userId} />
+
+        {profile.is_admin && (
+          <Link
+            href="/admin"
+            className="w-full text-center bg-gray-100 text-gray-800 rounded-lg py-2 text-sm font-medium hover:bg-gray-200"
+          >
+            Espace Admin
+          </Link>
+        )}
 
         <button
           onClick={handleLogout}
