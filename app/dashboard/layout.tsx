@@ -39,10 +39,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = [
     { label: 'Mon espace', href: '/dashboard' },
     { label: 'Récompenses', href: '/dashboard/rewards' },
-    ...(isAdmin ? [{ label: 'Espace Admin', href: '/admin' }] : []),
   ]
 
   const bottomItems = [
+    ...(isAdmin ? [{ label: 'Espace Admin', href: '/admin' }] : []),
     { label: 'Se déconnecter', onClick: handleLogout },
   ]
 
