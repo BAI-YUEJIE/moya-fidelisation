@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import QRCodeDisplay from '@/components/QRCodeDisplay'
 
 type Profile = {
   name: string
   points: number
-  is_admin: boolean
 }
 
 export default function DashboardPage() {
@@ -31,7 +29,7 @@ export default function DashboardPage() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('name, points, is_admin')
+        .select('name, points')
         .eq('id', user.id)
         .single()
 
@@ -41,22 +39,16 @@ export default function DashboardPage() {
     loadUser()
   }, [router])
 
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
   if (!userId || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-400 text-sm">Chargement...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow w-full max-w-sm p-8 flex flex-col items-center gap-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">Bonjour, {profile.name}</h1>
@@ -64,22 +56,6 @@ export default function DashboardPage() {
         </div>
 
         <QRCodeDisplay userId={userId} />
-
-        {profile.is_admin && (
-          <Link
-            href="/admin"
-            className="w-full text-center bg-gray-100 text-gray-800 rounded-lg py-2 text-sm font-medium hover:bg-gray-200"
-          >
-            Espace Admin
-          </Link>
-        )}
-
-        <button
-          onClick={handleLogout}
-          className="w-full bg-black text-white rounded-lg py-2 text-sm font-medium hover:bg-gray-800"
-        >
-          Se déconnecter
-        </button>
       </div>
     </div>
   )
