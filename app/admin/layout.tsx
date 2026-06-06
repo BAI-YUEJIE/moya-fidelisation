@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ]
 
   const bottomItems = [
-    { label: '← Dashboard', href: '/dashboard' },
+    { label: 'Dashboard', href: '/dashboard' },
     { label: 'Se déconnecter', onClick: handleLogout },
   ]
 
