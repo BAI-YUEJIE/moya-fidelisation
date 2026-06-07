@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 type Member = {
@@ -34,7 +32,6 @@ function formatDate(dateStr: string): string {
 }
 
 export default function AdminPage() {
-  const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<ModalState>(null)
@@ -42,28 +39,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     loadMembers()
-  }, [router])
+  }, [])
 
   async function loadMembers() {
     const supabase = createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile?.is_admin) {
-      router.push('/dashboard')
-      return
-    }
-
     const { data } = await supabase
       .from('members_view')
       .select('id, name, email, birthday, points, created_at')
@@ -105,22 +84,17 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-400 text-sm">Chargement...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="p-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-800">
-              ← Dashboard
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">Espace Admin</h1>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Membres</h1>
           <span className="text-sm text-gray-500">{members.length} membres</span>
         </div>
 
