@@ -42,7 +42,6 @@ export default function VouchersPage() {
       .from('vouchers')
       .select('id, token, status, created_at, used_at, rewards(name, points_cost, image_url)')
       .eq('user_id', user.id)
-      .eq('type', 'redemption')
       .order('created_at', { ascending: false })
 
     if (data) setVouchers(data as unknown as Voucher[])
