@@ -38,6 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Récompenses', href: '/admin/rewards' },
     { label: 'Codes cadeaux', href: '/admin/vouchers' },
     { label: 'Scanner', href: '/admin/scan' },
+    { label: 'Classement', href: '/admin/leaderboard' },
   ]
 
   const bottomItems = [
