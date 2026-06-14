@@ -39,6 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = [
     { label: 'Mon espace', href: '/dashboard' },
     { label: 'Récompenses', href: '/dashboard/rewards' },
+    { label: 'Mes bons', href: '/dashboard/vouchers' },
   ]
 
   const bottomItems = [

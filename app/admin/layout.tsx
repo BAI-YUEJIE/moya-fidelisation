@@ -36,6 +36,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { label: 'Membres', href: '/admin' },
     { label: 'Récompenses', href: '/admin/rewards' },
+    { label: 'Codes cadeaux', href: '/admin/vouchers' },
+    { label: 'Scanner', href: '/admin/scan' },
   ]
 
   const bottomItems = [
