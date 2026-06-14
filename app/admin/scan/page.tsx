@@ -12,9 +12,21 @@ type VoucherResult = {
   profiles: { name: string } | null
 }
 
+type MemberResult = {
+  id: string
+  name: string
+  points: number
+  birthday: string
+  created_at: string
+}
+
+type ScanResult =
+  | { kind: 'voucher'; data: VoucherResult }
+  | { kind: 'member'; data: MemberResult }
+
 export default function ScanPage() {
   const [scanning, setScanning] = useState(false)
-  const [voucher, setVoucher] = useState<VoucherResult | null>(null)
+  const [result, setResult] = useState<ScanResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [validating, setValidating] = useState(false)
   const scannerRef = useRef<unknown>(null)
@@ -27,7 +39,7 @@ export default function ScanPage() {
   }, [])
 
   async function startScanner() {
-    setVoucher(null)
+    setResult(null)
     setError(null)
     setScanning(true)
 
@@ -39,11 +51,10 @@ export default function ScanPage() {
       await scanner.start(
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 250, height: 250 } },
-        async (token: string) => {
+        async (scanned: string) => {
           await scanner.stop()
           setScanning(false)
-          console.log('Token scanné:', token)
-          await lookupVoucher(token)
+          await lookup(scanned)
         },
         () => {}
       )
@@ -59,47 +70,62 @@ export default function ScanPage() {
     setScanning(false)
   }
 
-  async function lookupVoucher(token: string) {
+  async function lookup(scanned: string) {
     const supabase = createClient()
-    const { data } = await supabase
+
+    // 1. Chercher dans les vouchers
+    const { data: voucherData } = await supabase
       .from('vouchers')
       .select('id, status, used_at, type, rewards(name), profiles(name)')
-      .eq('token', token)
+      .eq('token', scanned)
       .single()
 
-    if (!data) {
-      setError('QR code invalide ou introuvable.')
+    if (voucherData) {
+      setResult({ kind: 'voucher', data: voucherData as unknown as VoucherResult })
       return
     }
-    setVoucher(data as unknown as VoucherResult)
+
+    // 2. Chercher dans les membres (QR code personnel)
+    const { data: memberData } = await supabase
+      .from('profiles')
+      .select('id, name, points, birthday, created_at')
+      .eq('id', scanned)
+      .single()
+
+    if (memberData) {
+      setResult({ kind: 'member', data: memberData as MemberResult })
+      return
+    }
+
+    setError('QR code invalide ou introuvable.')
   }
 
   async function handleValidate() {
-    if (!voucher) return
+    if (result?.kind !== 'voucher') return
     setValidating(true)
     const supabase = createClient()
     const now = new Date().toISOString()
     await supabase
       .from('vouchers')
       .update({ status: 'used', used_at: now })
-      .eq('id', voucher.id)
+      .eq('id', result.data.id)
 
-    setVoucher({ ...voucher, status: 'used', used_at: now })
+    setResult({ kind: 'voucher', data: { ...result.data, status: 'used', used_at: now } })
     setValidating(false)
   }
 
   function reset() {
-    setVoucher(null)
+    setResult(null)
     setError(null)
   }
 
   return (
     <div className="p-6">
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Scanner un bon</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Scanner</h1>
 
         {/* Scanner area */}
-        {!voucher && !error && (
+        {!result && !error && (
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center gap-4">
             <div id="qr-reader" className={`w-full ${scanning ? 'block' : 'hidden'}`} />
 
@@ -109,7 +135,7 @@ export default function ScanPage() {
                   📷
                 </div>
                 <p className="text-sm text-gray-500 text-center">
-                  Appuyez sur le bouton pour scanner le QR code du client
+                  Scanner le QR code personnel d'un membre ou un bon de récompense
                 </p>
                 <button
                   onClick={startScanner}
@@ -132,40 +158,37 @@ export default function ScanPage() {
         {/* Error */}
         {error && (
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-3xl">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-2xl text-red-500 font-bold">
               ✕
             </div>
             <p className="font-semibold text-gray-900">QR code invalide</p>
             <p className="text-sm text-gray-500 text-center">{error}</p>
-            <button
-              onClick={reset}
-              className="w-full py-2 rounded-lg text-sm font-medium bg-black text-white hover:bg-gray-800"
-            >
+            <button onClick={reset} className="w-full py-2 rounded-lg text-sm font-medium bg-black text-white hover:bg-gray-800">
               Réessayer
             </button>
           </div>
         )}
 
         {/* Voucher result */}
-        {voucher && (
+        {result?.kind === 'voucher' && (
           <div className="bg-white rounded-xl shadow p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                voucher.status === 'unused' ? 'bg-green-100' : 'bg-gray-100'
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${
+                result.data.status === 'unused' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
               }`}>
-                {voucher.status === 'unused' ? '✓' : '✕'}
+                {result.data.status === 'unused' ? '✓' : '✕'}
               </div>
               <div>
-                <p className="font-bold text-gray-900">{voucher.rewards.name}</p>
+                <p className="font-bold text-gray-900">{result.data.rewards.name}</p>
                 <p className="text-sm text-gray-500">
-                  {voucher.profiles?.name ?? 'Code cadeau'}
+                  {result.data.profiles?.name ?? 'Code cadeau'}
                   {' · '}
-                  {voucher.type === 'promo' ? 'Cadeau' : 'Échange de points'}
+                  {result.data.type === 'promo' ? 'Cadeau' : 'Échange de points'}
                 </p>
               </div>
             </div>
 
-            {voucher.status === 'unused' ? (
+            {result.data.status === 'unused' ? (
               <>
                 <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
                   <p className="text-sm font-medium text-green-800">Bon valide — non utilisé</p>
@@ -181,19 +204,54 @@ export default function ScanPage() {
             ) : (
               <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
                 <p className="text-sm font-medium text-gray-700">Ce bon a déjà été utilisé</p>
-                {voucher.used_at && (
+                {result.data.used_at && (
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Le {new Date(voucher.used_at).toLocaleDateString('fr-FR')}
+                    Le {new Date(result.data.used_at).toLocaleDateString('fr-FR')}
                   </p>
                 )}
               </div>
             )}
 
-            <button
-              onClick={reset}
-              className="w-full py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Scanner un autre bon
+            <button onClick={reset} className="w-full py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50">
+              Scanner un autre
+            </button>
+          </div>
+        )}
+
+        {/* Member result */}
+        {result?.kind === 'member' && (
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-xl">
+                👤
+              </div>
+              <div>
+                <p className="font-bold text-gray-900">{result.data.name}</p>
+                <p className="text-sm text-gray-500">Membre</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg divide-y divide-gray-100">
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-sm text-gray-500">Points</span>
+                <span className="text-sm font-semibold text-gray-900">{result.data.points}</span>
+              </div>
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-sm text-gray-500">Date de naissance</span>
+                <span className="text-sm text-gray-900">
+                  {new Date(result.data.birthday).toLocaleDateString('fr-FR')}
+                </span>
+              </div>
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-sm text-gray-500">Membre depuis</span>
+                <span className="text-sm text-gray-900">
+                  {new Date(result.data.created_at).toLocaleDateString('fr-FR')}
+                </span>
+              </div>
+            </div>
+
+            <button onClick={reset} className="w-full py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50">
+              Scanner un autre
             </button>
           </div>
         )}
