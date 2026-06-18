@@ -72,10 +72,12 @@ export default function AdminPage() {
       ? modal.member.points + amount
       : Math.max(modal.member.points - amount, 0)
 
-    await supabase
-      .from('profiles')
-      .update({ points: newPoints })
-      .eq('id', modal.member.id)
+    const historyAmount = modal.action === 'ajouter' ? amount : -Math.min(amount, modal.member.points)
+
+    await Promise.all([
+      supabase.from('profiles').update({ points: newPoints }).eq('id', modal.member.id),
+      supabase.from('points_history').insert({ user_id: modal.member.id, amount: historyAmount, reason: modal.action === 'ajouter' ? 'ajout_manuel' : 'retrait_manuel', description: null }),
+    ])
 
     setSaving(false)
     closeModal()
