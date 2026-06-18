@@ -53,6 +53,7 @@ export default function RewardsPage() {
     await Promise.all([
       supabase.from('profiles').update({ points: newPoints }).eq('id', profile.id),
       supabase.from('vouchers').insert({ user_id: profile.id, reward_id: reward.id, type: 'redemption' }),
+      supabase.from('points_history').insert({ user_id: profile.id, amount: -reward.points_cost, reason: 'échange', description: reward.name }),
     ])
 
     setConfirmReward(null)

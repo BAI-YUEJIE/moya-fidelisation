@@ -40,6 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { label: 'Mon espace', href: '/dashboard' },
     { label: 'Récompenses', href: '/dashboard/rewards' },
     { label: 'Mes bons', href: '/dashboard/vouchers' },
+    { label: 'Historique', href: '/dashboard/history' },
   ]
 
   const bottomItems = [
