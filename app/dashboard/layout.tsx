@@ -44,6 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ]
 
   const bottomItems = [
+    { label: 'Mon profil', href: '/dashboard/profile' },
     ...(isAdmin ? [{ label: 'Espace Admin', href: '/admin' }] : []),
     { label: 'Se déconnecter', onClick: handleLogout },
   ]
