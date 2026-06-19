@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Sidebar from '@/components/Sidebar'
+import { UserProvider, useUser } from './user-context'
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter()
-  const [userName, setUserName] = useState('')
+  const { userName, setUserName } = useUser()
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     }
     load()
-  }, [router])
+  }, [router, setUserName])
 
   async function handleLogout() {
     const supabase = createClient()
@@ -44,6 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ]
 
   const bottomItems = [
+    { label: 'Mon profil', href: '/dashboard/profile' },
     ...(isAdmin ? [{ label: 'Espace Admin', href: '/admin' }] : []),
     { label: 'Se déconnecter', onClick: handleLogout },
   ]
@@ -55,5 +57,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
     </div>
+  )
+}
+
+export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <UserProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </UserProvider>
   )
 }
