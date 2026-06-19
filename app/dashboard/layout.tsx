@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Sidebar from '@/components/Sidebar'
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter()
   const [userName, setUserName] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -44,6 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ]
 
   const bottomItems = [
+    { label: 'Mon profil', href: '/dashboard/profile' },
     ...(isAdmin ? [{ label: 'Espace Admin', href: '/admin' }] : []),
     { label: 'Se déconnecter', onClick: handleLogout },
   ]
