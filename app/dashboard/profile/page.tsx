@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useUser } from '../user-context'
 
 type ProfileData = {
   name: string
@@ -14,6 +15,7 @@ type ProfileData = {
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { setUserName } = useUser()
   const [userId, setUserId] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [form, setForm] = useState({ name: '', birthday: '' })
@@ -69,6 +71,7 @@ export default function ProfilePage() {
     } else {
       setInfoSuccess(true)
       setProfile(prev => prev ? { ...prev, name: form.name, birthday: form.birthday } : prev)
+      setUserName(form.name)
       setEditingInfo(false)
     }
     setSavingInfo(false)
