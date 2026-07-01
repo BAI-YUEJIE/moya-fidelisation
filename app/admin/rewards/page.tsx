@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
@@ -45,6 +45,10 @@ export default function AdminRewardsPage() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [detailReward, setDetailReward] = useState<Reward | null>(null)
+  const [filterType, setFilterType] = useState<'tous' | 'échange' | 'cadeau'>('tous')
+  const [filterVisible, setFilterVisible] = useState<'tous' | 'visible' | 'masqué'>('tous')
+  const [filterSort, setFilterSort] = useState<'points-asc' | 'points-desc' | 'nom'>('points-asc')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { loadRewards() }, [])
@@ -104,7 +108,7 @@ export default function AdminRewardsPage() {
     setImageMode('url')
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const cost = form.type === 'cadeau' ? 0 : parseInt(form.points_cost)
     if (!form.name || (form.type === 'échange' && (isNaN(cost) || cost <= 0))) return
@@ -128,7 +132,7 @@ export default function AdminRewardsPage() {
       points_cost: cost,
       image_url: imageUrl,
       type: form.type,
-      visible: form.visible,
+      visible: form.type === 'cadeau' ? true : form.visible,
       start_date: form.start_date || null,
       end_date: form.end_date || null,
       max_per_member: form.max_per_member ? parseInt(form.max_per_member) : null,
@@ -147,6 +151,17 @@ export default function AdminRewardsPage() {
     closeModal()
     await loadRewards()
   }
+
+  const filteredRewards = useMemo(() => {
+    let list = [...rewards]
+    if (filterType !== 'tous') list = list.filter(r => r.type === filterType)
+    if (filterVisible === 'visible') list = list.filter(r => r.visible)
+    if (filterVisible === 'masqué') list = list.filter(r => !r.visible)
+    if (filterSort === 'points-asc') list.sort((a, b) => a.points_cost - b.points_cost)
+    if (filterSort === 'points-desc') list.sort((a, b) => b.points_cost - a.points_cost)
+    if (filterSort === 'nom') list.sort((a, b) => a.name.localeCompare(b.name))
+    return list
+  }, [rewards, filterType, filterVisible, filterSort])
 
   async function handleDelete(id: string) {
     const supabase = createClient()
@@ -175,14 +190,63 @@ export default function AdminRewardsPage() {
           </button>
         </div>
 
-        {rewards.length === 0 ? (
+        {/* Filtres */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+            {(['tous', 'échange', 'cadeau'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setFilterType(t)}
+                className={`px-3 py-1.5 font-medium capitalize transition-colors ${
+                  filterType === t ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {t === 'tous' ? 'Tous' : t === 'échange' ? 'Échange' : 'Cadeau'}
+              </button>
+            ))}
+          </div>
+
+          {filterType !== 'cadeau' && (
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+              {(['tous', 'visible', 'masqué'] as const).map(v => (
+                <button
+                  key={v}
+                  onClick={() => setFilterVisible(v)}
+                  className={`px-3 py-1.5 font-medium capitalize transition-colors ${
+                    filterVisible === v ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {v === 'tous' ? 'Tous' : v === 'visible' ? 'Visible' : 'Masqué'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <select
+            value={filterSort}
+            onChange={(e) => setFilterSort(e.target.value as typeof filterSort)}
+            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 bg-white focus:outline-none"
+          >
+            <option value="points-asc">Points ↑</option>
+            <option value="points-desc">Points ↓</option>
+            <option value="nom">Nom A–Z</option>
+          </select>
+        </div>
+
+        {filteredRewards.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-12 text-center">
-            <p className="text-gray-400">Aucune récompense pour l'instant.</p>
+            <p className="text-gray-400">
+              {rewards.length === 0 ? 'Aucune récompense pour l\'instant.' : 'Aucun résultat pour ces filtres.'}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rewards.map((reward) => (
-              <div key={reward.id} className={`bg-white rounded-xl shadow overflow-hidden ${!reward.visible ? 'opacity-60' : ''}`}>
+            {filteredRewards.map((reward) => (
+              <div
+                key={reward.id}
+                onClick={() => setDetailReward(reward)}
+                className={`bg-white rounded-xl shadow overflow-hidden cursor-pointer hover:shadow-md transition-shadow ${!reward.visible ? 'opacity-60' : ''}`}
+              >
                 {reward.image_url ? (
                   <div className="relative h-40 w-full">
                     <Image src={reward.image_url} alt={reward.name} fill className="object-cover" />
@@ -191,64 +255,22 @@ export default function AdminRewardsPage() {
                   <div className="h-40 bg-gray-100 flex items-center justify-center text-4xl text-gray-300">🎁</div>
                 )}
                 <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-gray-900 leading-tight">{reward.name}</p>
-                    <div className="flex gap-1 shrink-0 flex-wrap justify-end">
+                    <div className="flex gap-1 shrink-0">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         reward.type === 'cadeau' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
                       }`}>
                         {reward.type === 'cadeau' ? 'Cadeau' : 'Échange'}
                       </span>
-                      {!reward.visible && (
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">Masqué</span>
-                      )}
                     </div>
                   </div>
-
                   {reward.type === 'échange' && (
-                    <p className="text-sm text-gray-500">{reward.points_cost} points</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{reward.points_cost} points</p>
                   )}
-                  {reward.description && (
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">{reward.description}</p>
+                  {!reward.visible && (
+                    <p className="text-xs text-gray-400 mt-1">Masqué</p>
                   )}
-
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {reward.stock !== null && (
-                      <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
-                        Stock : {reward.stock}
-                      </span>
-                    )}
-                    {reward.min_tier && (
-                      <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
-                        ≥ {reward.min_tier}
-                      </span>
-                    )}
-                    {reward.max_per_member && (
-                      <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
-                        Max {reward.max_per_member}/membre
-                      </span>
-                    )}
-                    {reward.end_date && (
-                      <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
-                        Jusqu'au {reward.end_date.split('-').reverse().join('/')}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => openEdit(reward)}
-                      className="flex-1 text-xs text-gray-600 hover:text-gray-800 px-2 py-1.5 rounded border border-gray-200 hover:bg-gray-50"
-                    >
-                      Modifier
-                    </button>
-                    <button
-                      onClick={() => handleDelete(reward.id)}
-                      className="flex-1 text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded border border-red-100 hover:bg-red-50"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
                 </div>
               </div>
             ))}
@@ -492,6 +514,104 @@ export default function AdminRewardsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal détail récompense */}
+      {detailReward && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden relative">
+            <button
+              onClick={() => setDetailReward(null)}
+              className="absolute top-3 right-3 z-10 bg-white/80 hover:bg-white text-gray-600 rounded-full w-7 h-7 flex items-center justify-center text-sm shadow"
+            >
+              ✕
+            </button>
+            {detailReward.image_url ? (
+              <div className="relative h-48 w-full">
+                <Image src={detailReward.image_url} alt={detailReward.name} fill className="object-cover" />
+              </div>
+            ) : (
+              <div className="h-32 bg-gray-100 flex items-center justify-center text-5xl text-gray-300">🎁</div>
+            )}
+
+            <div className="p-5 flex flex-col gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-bold text-gray-900">{detailReward.name}</h2>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  detailReward.type === 'cadeau' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {detailReward.type === 'cadeau' ? 'Cadeau' : 'Échange'}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-1.5 text-sm">
+                {detailReward.type === 'échange' && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Points requis</span>
+                    <span className="font-medium">{detailReward.points_cost} pts</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Visible</span>
+                  <span className={`font-medium ${detailReward.visible ? 'text-green-600' : 'text-gray-400'}`}>
+                    {detailReward.visible ? 'Oui' : 'Non'}
+                  </span>
+                </div>
+                {detailReward.description && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-500 shrink-0">Description</span>
+                    <span className="text-gray-700 text-right">{detailReward.description}</span>
+                  </div>
+                )}
+                {detailReward.stock !== null && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Stock</span>
+                    <span className="font-medium">{detailReward.stock}</span>
+                  </div>
+                )}
+                {detailReward.max_per_member !== null && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Max par membre</span>
+                    <span className="font-medium">{detailReward.max_per_member}</span>
+                  </div>
+                )}
+                {detailReward.min_tier && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Niveau minimum</span>
+                    <span className="font-medium">{detailReward.min_tier}</span>
+                  </div>
+                )}
+                {detailReward.start_date && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Disponible dès</span>
+                    <span className="font-medium">{detailReward.start_date.split('-').reverse().join('/')}</span>
+                  </div>
+                )}
+                {detailReward.end_date && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Expire le</span>
+                    <span className="font-medium">{detailReward.end_date.split('-').reverse().join('/')}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1 border-t border-gray-100">
+                <button
+                  onClick={() => { setDetailReward(null); openEdit(detailReward) }}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  Modifier
+                </button>
+                <button
+                  onClick={() => { handleDelete(detailReward.id); setDetailReward(null) }}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium border border-red-100 text-red-500 hover:bg-red-50"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
