@@ -230,7 +230,7 @@ export default function AdminRewardsPage() {
                     )}
                     {reward.end_date && (
                       <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
-                        Jusqu'au {new Date(reward.end_date).toLocaleDateString('fr-FR')}
+                        Jusqu'au {reward.end_date.split('-').reverse().join('/')}
                       </span>
                     )}
                   </div>
