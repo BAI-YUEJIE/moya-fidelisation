@@ -57,7 +57,7 @@ export default function AdminVouchersPage() {
         .select('id, status, created_at, used_at, rewards(name), profiles(name)')
         .eq('type', 'promo')
         .order('created_at', { ascending: false }),
-      supabase.from('rewards').select('id, name').order('name'),
+      supabase.from('rewards').select('id, name').eq('type', 'cadeau').order('name'),
       supabase.from('profiles').select('id, name, points, created_at').order('name'),
     ])
 
