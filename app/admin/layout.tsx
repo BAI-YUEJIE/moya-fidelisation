@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: '#f5f3f0' }}>
       <Sidebar userName={userName} navItems={navItems} bottomItems={bottomItems} />
       <main className="lg:pl-56 pt-14 lg:pt-0">
         {children}
