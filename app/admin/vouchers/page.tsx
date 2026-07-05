@@ -37,6 +37,7 @@ export default function AdminVouchersPage() {
   const [step, setStep] = useState<Step>(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [selectedRewardId, setSelectedRewardId] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
   const [saving, setSaving] = useState(false)
 
   // Filters
@@ -111,6 +112,7 @@ export default function AdminVouchersPage() {
     setStep(1)
     setSelectedIds(new Set())
     setSelectedRewardId('')
+    setExpiresAt('')
     setSearch('')
     setMinPoints('')
     setMaxPoints('')
@@ -132,6 +134,7 @@ export default function AdminVouchersPage() {
         reward_id: selectedRewardId,
         user_id: userId,
         type: 'promo',
+        ...(expiresAt ? { expires_at: expiresAt } : {}),
       }))
     )
 
@@ -343,6 +346,17 @@ export default function AdminVouchersPage() {
                         <option key={r.id} value={r.id}>{r.name}</option>
                       ))}
                     </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Date d'expiration <span className="text-gray-400 font-normal">(optionnel)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={expiresAt}
+                      onChange={(e) => setExpiresAt(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                    />
                   </div>
                 </div>
 
