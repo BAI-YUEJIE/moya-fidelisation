@@ -13,6 +13,29 @@ type ProfileData = {
   email: string
 }
 
+function getTier(points: number) {
+  if (points >= 500) return { label: 'Gold', color: '#b8860b', next: null, min: 500, max: 500 }
+  if (points >= 200) return { label: 'Silver', color: '#6b7280', next: 500, min: 200, max: 500 }
+  return { label: 'Bronze', color: '#b45309', next: 200, min: 0, max: 200 }
+}
+
+function formatDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('T')[0].split('-')
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
+  return `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`
+}
+
+const inputStyle = {
+  border: '1px solid #f0ebe4',
+  borderRadius: '12px',
+  padding: '10px 14px',
+  fontSize: '14px',
+  outline: 'none',
+  color: '#1c1917',
+  backgroundColor: '#ffffff',
+  width: '100%',
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const { setUserName } = useUser()
@@ -24,7 +47,6 @@ export default function ProfilePage() {
   const [passwordForm, setPasswordForm] = useState({ next: '', confirm: '' })
   const [savingInfo, setSavingInfo] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
-  const [infoSuccess, setInfoSuccess] = useState(false)
   const [infoError, setInfoError] = useState<string | null>(null)
   const [passwordSuccess, setPasswordSuccess] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
@@ -58,7 +80,6 @@ export default function ProfilePage() {
     if (!userId) return
     setSavingInfo(true)
     setInfoError(null)
-    setInfoSuccess(false)
 
     const supabase = createClient()
     const { error } = await supabase
@@ -69,7 +90,6 @@ export default function ProfilePage() {
     if (error) {
       setInfoError('Une erreur est survenue.')
     } else {
-      setInfoSuccess(true)
       setProfile(prev => prev ? { ...prev, name: form.name, birthday: form.birthday } : prev)
       setUserName(form.name)
       setEditingInfo(false)
@@ -108,45 +128,88 @@ export default function ProfilePage() {
   if (loading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Chargement...</p>
+        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
       </div>
     )
   }
 
-  return (
-    <div className="p-6">
-      <div className="max-w-lg mx-auto flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-gray-900">Mon profil</h1>
+  const tier = getTier(profile.points)
+  const progress = tier.next
+    ? Math.round(((profile.points - tier.min) / (tier.max - tier.min)) * 100)
+    : 100
 
-        {/* Infos non modifiables */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Mon compte</h2>
-          <div className="flex flex-col divide-y divide-gray-100">
-            <div className="flex justify-between py-3">
-              <span className="text-sm text-gray-500">Email</span>
-              <span className="text-sm text-gray-900">{profile.email}</span>
-            </div>
-            <div className="flex justify-between py-3">
-              <span className="text-sm text-gray-500">Points</span>
-              <span className="text-sm font-semibold text-gray-900">{profile.points} pts</span>
-            </div>
-            <div className="flex justify-between py-3">
-              <span className="text-sm text-gray-500">Membre depuis</span>
-              <span className="text-sm text-gray-900">
-                {new Date(profile.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+  return (
+    <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+      <div className="max-w-lg mx-auto flex flex-col gap-5">
+
+        {/* Avatar + nom + niveau */}
+        <div className="pt-2 flex items-center gap-4">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0"
+            style={{ backgroundColor: 'rgba(240,136,22,0.12)', color: '#f08816' }}
+          >
+            {profile.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-gray-900 truncate">{profile.name}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span
+                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: 'rgba(240,136,22,0.1)', color: tier.color }}
+              >
+                {tier.label}
+              </span>
+              <span className="text-xs" style={{ color: '#9ca3af' }}>
+                {profile.points} pts
               </span>
             </div>
+            {tier.next && (
+              <div className="mt-2">
+                <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#f0ebe4' }}>
+                  <div
+                    className="h-1 rounded-full"
+                    style={{ width: `${progress}%`, backgroundColor: '#f08816' }}
+                  />
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>
+                  encore {tier.next - profile.points} pts pour {tier.label === 'Bronze' ? 'Silver' : 'Gold'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Infos modifiables */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900">Informations personnelles</h2>
+        {/* Mon compte */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3.5" style={{ borderBottom: '1px solid #f5f3f0' }}>
+            <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#9ca3af' }}>Mon compte</p>
+          </div>
+          <div>
+            {[
+              { label: 'Email', value: profile.email },
+              { label: 'Membre depuis', value: formatDate(profile.created_at) },
+            ].map((row, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between px-5 py-3.5"
+                style={i === 0 ? { borderBottom: '1px solid #f5f3f0' } : {}}
+              >
+                <span className="text-sm" style={{ color: '#9ca3af' }}>{row.label}</span>
+                <span className="text-sm font-medium text-gray-900">{row.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Informations personnelles */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid #f5f3f0' }}>
+            <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#9ca3af' }}>Informations personnelles</p>
             {!editingInfo && (
               <button
                 onClick={() => setEditingInfo(true)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 underline"
+                className="text-xs font-semibold px-3 py-1 rounded-lg"
+                style={{ backgroundColor: '#fff7ed', color: '#f08816' }}
               >
                 Modifier
               </button>
@@ -154,78 +217,79 @@ export default function ProfilePage() {
           </div>
 
           {editingInfo ? (
-            <form onSubmit={handleSaveInfo} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="info-name" className="text-sm font-medium text-gray-700">Nom complet</label>
+            <form onSubmit={handleSaveInfo} className="p-5 flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="info-name" className="text-xs font-medium" style={{ color: '#6b7280' }}>Nom complet</label>
                 <input
                   id="info-name"
                   type="text"
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  style={inputStyle}
                 />
               </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="info-birthday" className="text-sm font-medium text-gray-700">Date de naissance</label>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="info-birthday" className="text-xs font-medium" style={{ color: '#6b7280' }}>Date de naissance</label>
                 <input
                   id="info-birthday"
                   type="date"
                   required
                   value={form.birthday}
                   onChange={(e) => setForm({ ...form, birthday: e.target.value })}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  style={inputStyle}
                 />
               </div>
-
               {infoError && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{infoError}</p>
+                <p className="text-xs px-3 py-2 rounded-xl" style={{ backgroundColor: '#fef2f2', color: '#ef4444' }}>{infoError}</p>
               )}
-              {infoSuccess && (
-                <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">Informations mises à jour.</p>
-              )}
-
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => { setEditingInfo(false); setForm({ name: profile.name, birthday: profile.birthday }); setInfoError(null) }}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+                  style={{ backgroundColor: '#f5f3f0', color: '#6b7280' }}
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={savingInfo}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+                  style={{ backgroundColor: '#f08816', color: '#ffffff' }}
                 >
                   {savingInfo ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
               </div>
             </form>
           ) : (
-            <div className="flex flex-col divide-y divide-gray-100">
-              <div className="flex justify-between py-3">
-                <span className="text-sm text-gray-500">Nom complet</span>
-                <span className="text-sm text-gray-900">{profile.name}</span>
-              </div>
-              <div className="flex justify-between py-3">
-                <span className="text-sm text-gray-500">Date de naissance</span>
-                <span className="text-sm text-gray-900">
-                  {new Date(profile.birthday).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </span>
-              </div>
+            <div>
+              {[
+                { label: 'Nom complet', value: profile.name },
+                { label: 'Date de naissance', value: formatDate(profile.birthday) },
+              ].map((row, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-5 py-3.5"
+                  style={i === 0 ? { borderBottom: '1px solid #f5f3f0' } : {}}
+                >
+                  <span className="text-sm" style={{ color: '#9ca3af' }}>{row.label}</span>
+                  <span className="text-sm font-medium text-gray-900">{row.value}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
         {/* Mot de passe */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900">Mot de passe</h2>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid #f5f3f0' }}>
+            <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#9ca3af' }}>Mot de passe</p>
             {!editingPassword && (
               <button
                 onClick={() => setEditingPassword(true)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 underline"
+                className="text-xs font-semibold px-3 py-1 rounded-lg"
+                style={{ backgroundColor: '#fff7ed', color: '#f08816' }}
               >
                 Modifier
               </button>
@@ -233,9 +297,9 @@ export default function ProfilePage() {
           </div>
 
           {editingPassword ? (
-            <form onSubmit={handleSavePassword} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="pwd-next" className="text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+            <form onSubmit={handleSavePassword} className="p-5 flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="pwd-next" className="text-xs font-medium" style={{ color: '#6b7280' }}>Nouveau mot de passe</label>
                 <input
                   id="pwd-next"
                   type="password"
@@ -243,49 +307,52 @@ export default function ProfilePage() {
                   minLength={6}
                   value={passwordForm.next}
                   onChange={(e) => setPasswordForm({ ...passwordForm, next: e.target.value })}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  style={inputStyle}
                 />
               </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="pwd-confirm" className="text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="pwd-confirm" className="text-xs font-medium" style={{ color: '#6b7280' }}>Confirmer le mot de passe</label>
                 <input
                   id="pwd-confirm"
                   type="password"
                   required
                   value={passwordForm.confirm}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  style={inputStyle}
                 />
               </div>
-
               {passwordError && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{passwordError}</p>
+                <p className="text-xs px-3 py-2 rounded-xl" style={{ backgroundColor: '#fef2f2', color: '#ef4444' }}>{passwordError}</p>
               )}
               {passwordSuccess && (
-                <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">Mot de passe mis à jour.</p>
+                <p className="text-xs px-3 py-2 rounded-xl" style={{ backgroundColor: '#f0fdf4', color: '#16a34a' }}>Mot de passe mis à jour.</p>
               )}
-
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => { setEditingPassword(false); setPasswordForm({ next: '', confirm: '' }); setPasswordError(null) }}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+                  style={{ backgroundColor: '#f5f3f0', color: '#6b7280' }}
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={savingPassword}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+                  style={{ backgroundColor: '#f08816', color: '#ffffff' }}
                 >
                   {savingPassword ? 'Enregistrement...' : 'Mettre à jour'}
                 </button>
               </div>
             </form>
           ) : (
-            <p className="text-sm text-gray-400 tracking-widest">••••••••</p>
+            <div className="px-5 py-3.5">
+              <p className="text-sm tracking-widest" style={{ color: '#d1d5db' }}>••••••••</p>
+            </div>
           )}
         </div>
+
       </div>
     </div>
   )
