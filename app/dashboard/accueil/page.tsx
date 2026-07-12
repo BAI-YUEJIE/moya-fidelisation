@@ -13,6 +13,9 @@ type Announcement = {
   image_url: string | null
   created_at: string
   restaurant: string | null
+  pinned: boolean
+  publish_at: string | null
+  expires_at: string | null
 }
 
 function getTier(points: number) {
@@ -65,6 +68,7 @@ export default function AccueilPage() {
     const idx = saved ? parseInt(saved, 10) : 0
     return idx >= 0 && idx < RESTAURANTS.length ? idx : 0
   })
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [tipsOpen, setTipsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -81,7 +85,7 @@ export default function AccueilPage() {
       setUserId(user.id)
       const [{ data: profileData }, { data: announcementsData }, { count }] = await Promise.all([
         supabase.from('profiles').select('name, points').eq('id', user.id).single(),
-        supabase.from('announcements').select('id, title, body, image_url, created_at, restaurant').eq('active', true).order('created_at', { ascending: false }),
+        supabase.from('announcements').select('id, title, body, image_url, created_at, restaurant, pinned, publish_at, expires_at').eq('active', true).or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`).or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
         supabase.from('vouchers').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'unused'),
       ])
       if (profileData) setProfile(profileData)
@@ -332,26 +336,64 @@ export default function AccueilPage() {
             Actualités · {selected.city}
           </p>
           {visibleAnnouncements.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {visibleAnnouncements.map(a => (
-                <div key={a.id} className="bg-white rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.04)' }}>
-                  {a.image_url && <img src={a.image_url} alt={a.title} className="w-full h-44 object-cover" />}
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-xs" style={{ color: '#b0a89e' }}>
+            <div
+              className="flex gap-3 overflow-x-auto pb-1"
+              style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {visibleAnnouncements.map(a => {
+                const isExpanded = expandedIds.has(a.id)
+                return (
+                  <div
+                    key={a.id}
+                    className="bg-white rounded-2xl shadow-sm overflow-hidden flex-shrink-0"
+                    style={{
+                      width: visibleAnnouncements.length === 1 ? '100%' : '82%',
+                      scrollSnapAlign: 'start',
+                      border: '1px solid rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    {a.image_url && (
+                      <img
+                        src={a.image_url}
+                        alt={a.title}
+                        className="w-full object-cover"
+                        style={{ aspectRatio: '16/9' }}
+                      />
+                    )}
+                    <div className="p-4">
+                      <p className="text-xs mb-1" style={{ color: '#b0a89e' }}>
                         {new Date(a.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
                       </p>
-                      {a.restaurant === null && (
-                        <span className="text-xs px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#f5f3f0', color: '#9ca3af' }}>
-                          Tous les restaurants
-                        </span>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-sm" style={{ color: '#1c1917' }}>{a.title}</p>
+                        {a.pinned && (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="#f08816" stroke="none" className="flex-shrink-0 mt-0.5">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                          </svg>
+                        )}
+                      </div>
+                      {a.body && (
+                        <>
+                          {isExpanded && (
+                            <p className="text-sm mt-2 leading-relaxed" style={{ color: '#6b7280' }}>{a.body}</p>
+                          )}
+                          <button
+                            onClick={() => setExpandedIds(prev => {
+                              const next = new Set(prev)
+                              isExpanded ? next.delete(a.id) : next.add(a.id)
+                              return next
+                            })}
+                            className="text-xs font-semibold mt-2"
+                            style={{ color: '#f08816' }}
+                          >
+                            {isExpanded ? 'Réduire ↑' : 'En savoir plus →'}
+                          </button>
+                        </>
                       )}
                     </div>
-                    <p className="font-semibold text-sm" style={{ color: '#1c1917' }}>{a.title}</p>
-                    {a.body && <p className="text-sm mt-1 leading-relaxed" style={{ color: '#6b7280' }}>{a.body}</p>}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="bg-white rounded-2xl px-4 py-5 flex items-center gap-3 shadow-sm" style={{ border: '1px solid rgba(0,0,0,0.04)' }}>
