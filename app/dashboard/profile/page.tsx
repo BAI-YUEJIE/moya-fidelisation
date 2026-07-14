@@ -7,7 +7,7 @@ import { useUser } from '../user-context'
 
 type ProfileData = {
   name: string
-  birthday: string
+  birthday: string | null
   points: number
   created_at: string
   email: string
@@ -19,7 +19,8 @@ function getTier(points: number) {
   return { label: 'Bronze', color: '#b45309', next: 200, min: 0, max: 200 }
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '—'
   const [y, m, d] = dateStr.split('T')[0].split('-')
   const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
   return `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`
@@ -68,7 +69,7 @@ export default function ProfilePage() {
       if (data) {
         const p = { ...data, email: user.email ?? '' }
         setProfile(p)
-        setForm({ name: data.name, birthday: data.birthday })
+        setForm({ name: data.name, birthday: data.birthday ?? '' })
       }
       setLoading(false)
     }
