@@ -247,7 +247,7 @@ export default function ProfilePage() {
               <div className="flex gap-3 pt-1">
                 <button
                   type="button"
-                  onClick={() => { setEditingInfo(false); setForm({ name: profile.name, birthday: profile.birthday }); setInfoError(null) }}
+                  onClick={() => { setEditingInfo(false); setForm({ name: profile.name, birthday: profile.birthday ?? '' }); setInfoError(null) }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium"
                   style={{ backgroundColor: '#f5f3f0', color: '#6b7280' }}
                 >
