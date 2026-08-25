@@ -137,7 +137,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-lg mx-auto flex flex-col gap-5">
+      <div className="max-w-lg mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Avatar + nom + niveau */}
         <div className="pt-2 flex items-center gap-4">
@@ -164,7 +164,7 @@ export default function ProfilePage() {
               <div className="mt-2">
                 <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#f0ebe4' }}>
                   <div
-                    className="h-1 rounded-full"
+                    className="h-1 rounded-full animate-progress"
                     style={{ width: `${progress}%`, backgroundColor: '#f08816' }}
                   />
                 </div>

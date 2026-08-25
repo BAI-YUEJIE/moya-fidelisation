@@ -160,7 +160,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-4xl mx-auto flex flex-col gap-5">
+      <div className="max-w-4xl mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Hero header */}
         <div className="rounded-3xl p-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1c1917, #292524)' }}>

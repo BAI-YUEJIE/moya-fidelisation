@@ -200,7 +200,7 @@ export default function AccueilPage() {
         </div>
       )}
 
-      <div className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-4">
+      <div className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-4 animate-fade-in">
 
         {/* ── Hero card ── */}
         <div className="relative overflow-hidden rounded-2xl px-5 py-6" style={{ background: 'linear-gradient(135deg, #1c1917, #292524)' }}>
@@ -226,7 +226,7 @@ export default function AccueilPage() {
                   {tier.next !== null ? (
                     <>
                       <div className="h-1 rounded-full overflow-hidden mb-1.5" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #f08816, #f5a623)' }} />
+                        <div className="h-full rounded-full animate-progress" style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #f08816, #f5a623)' }} />
                       </div>
                       <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
                         {tier.next - profile.points} pts avant le niveau {tier.nextLabel}

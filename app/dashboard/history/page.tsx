@@ -142,7 +142,7 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-2xl mx-auto flex flex-col gap-5">
+      <div className="max-w-2xl mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Header */}
         <div className="pt-2">
