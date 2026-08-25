@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier } from '@/lib/utils'
 
 type Member = {
   id: string
@@ -28,11 +29,6 @@ function formatDate(dateStr: string): string {
   return dateStr.split('T')[0].split('-').reverse().join('/')
 }
 
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', bg: 'rgba(184,134,11,0.1)' }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' }
-  return { label: 'Bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)' }
-}
 
 export default function AdminPage() {
   const [members, setMembers] = useState<Member[]>([])

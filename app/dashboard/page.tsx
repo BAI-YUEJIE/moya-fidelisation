@@ -5,16 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier } from '@/lib/utils'
 
 type Profile = {
   name: string
   points: number
-}
-
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', next: null, min: 500, max: 500, color: '#b8860b' }
-  if (points >= 200) return { label: 'Silver', next: 500, min: 200, max: 500, color: '#6b7280' }
-  return { label: 'Bronze', next: 200, min: 0, max: 200, color: '#b45309' }
 }
 
 // Icônes SVG sur mesure

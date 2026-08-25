@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier } from '@/lib/utils'
 
 type Member = {
   id: string
@@ -19,11 +20,6 @@ type ModalState = {
   amount: string
 } | null
 
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold',   color: '#b8860b', bg: 'rgba(184,134,11,0.1)',  bar: '#b8860b', min: 500, next: 500 }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', bg: 'rgba(107,114,128,0.1)', bar: '#6b7280', min: 200, next: 500 }
-  return              { label: 'Bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)',   bar: '#b45309', min: 0,   next: 200 }
-}
 
 function isBirthdayToday(birthday: string): boolean {
   if (!birthday) return false

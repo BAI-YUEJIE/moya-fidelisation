@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { getTier } from '@/lib/utils'
 
 type Reward = {
   id: string
@@ -26,12 +27,6 @@ type Profile = {
 type RedeemCount = Record<string, number>
 
 const tierOrder: Record<string, number> = { Bronze: 0, Silver: 1, Gold: 2 }
-
-function getUserTier(points: number): string {
-  if (points >= 500) return 'Gold'
-  if (points >= 200) return 'Silver'
-  return 'Bronze'
-}
 
 export default function RewardsPage() {
   const router = useRouter()
@@ -138,7 +133,7 @@ export default function RewardsPage() {
     await loadData()
   }
 
-  const userTier = getUserTier(profile?.points ?? 0)
+  const userTier = getTier(profile?.points ?? 0).label
 
   // Prochaine récompense la plus proche (non accessible mais pas bloquée par tier/stock/max)
   const nextReachable = useMemo(() => {

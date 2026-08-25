@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier } from '@/lib/utils'
 
 type Profile = { name: string; points: number }
 type Announcement = {
@@ -16,12 +17,6 @@ type Announcement = {
   pinned: boolean
   publish_at: string | null
   expires_at: string | null
-}
-
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', next: null, nextLabel: null }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', next: 500, nextLabel: 'Gold' }
-  return { label: 'Bronze', color: '#b45309', next: 200, nextLabel: 'Silver' }
 }
 
 const RESTAURANTS = [

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '../user-context'
+import { getTier } from '@/lib/utils'
 
 type ProfileData = {
   name: string
@@ -13,11 +14,6 @@ type ProfileData = {
   email: string
 }
 
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', next: null, min: 500, max: 500 }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', next: 500, min: 200, max: 500 }
-  return { label: 'Bronze', color: '#b45309', next: 200, min: 0, max: 200 }
-}
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '—'
