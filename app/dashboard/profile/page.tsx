@@ -124,8 +124,19 @@ export default function ProfilePage() {
 
   if (loading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-lg mx-auto flex flex-col gap-5">
+          <div className="flex items-center gap-4 pt-2">
+            <div className="skeleton w-16 h-16 rounded-2xl shrink-0" />
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="skeleton h-5 w-40 rounded-lg" />
+              <div className="skeleton h-3 w-24 rounded-lg" />
+            </div>
+          </div>
+          <div className="skeleton h-24 rounded-2xl" />
+          <div className="skeleton h-28 rounded-2xl" />
+          <div className="skeleton h-16 rounded-2xl" />
+        </div>
       </div>
     )
   }

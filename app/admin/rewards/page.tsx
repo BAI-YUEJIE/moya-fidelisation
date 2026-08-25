@@ -183,8 +183,13 @@ export default function AdminRewardsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f5f3f0' }}>
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-5xl mx-auto flex flex-col gap-5">
+          <div className="skeleton h-10 w-40 rounded-xl" />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[0,1,2,3,4,5].map(i => <div key={i} className="skeleton h-48 rounded-2xl" />)}
+          </div>
+        </div>
       </div>
     )
   }

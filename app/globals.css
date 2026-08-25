@@ -53,6 +53,19 @@ h1, h2, h3 {
   animation: progressFill 0.8s cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #ede9e4 25%, #f5f3f0 50%, #ede9e4 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+
 /* Staggered children */
 .animate-fade-in > * {
   animation: fadeIn 0.35s ease both;

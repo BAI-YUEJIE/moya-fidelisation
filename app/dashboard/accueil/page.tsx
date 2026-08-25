@@ -128,8 +128,15 @@ export default function AccueilPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f5f3f0' }}>
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen pb-12" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-4">
+          <div className="skeleton h-40 rounded-2xl" />
+          <div className="grid grid-cols-3 gap-2">
+            {[0,1,2].map(i => <div key={i} className="skeleton h-20 rounded-2xl" />)}
+          </div>
+          <div className="skeleton h-36 rounded-2xl" />
+          <div className="skeleton h-28 rounded-2xl" />
+        </div>
       </div>
     )
   }

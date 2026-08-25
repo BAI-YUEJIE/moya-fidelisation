@@ -149,8 +149,16 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f5f3f0' }}>
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-4xl mx-auto flex flex-col gap-5">
+          <div className="skeleton h-32 rounded-2xl" />
+          <div className="grid grid-cols-3 gap-3">
+            {[0,1,2].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}
+          </div>
+          <div className="flex flex-col gap-3">
+            {[0,1,2,3,4].map(i => <div key={i} className="skeleton h-16 rounded-2xl" />)}
+          </div>
+        </div>
       </div>
     )
   }
