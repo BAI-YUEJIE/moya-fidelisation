@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getTier } from '@/lib/utils'
+import { getTier, formatDate } from '@/lib/utils'
 
 type Reward = { id: string; name: string }
 
@@ -21,9 +21,6 @@ type Voucher = {
 
 type Step = 1 | 2
 
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
-}
 
 
 function isExpired(v: Voucher): boolean {

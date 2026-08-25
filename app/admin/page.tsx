@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getTier } from '@/lib/utils'
+import { getTier, formatDate } from '@/lib/utils'
 
 type Member = {
   id: string
@@ -23,10 +23,6 @@ function isBirthdayToday(birthday: string): boolean {
   const today = new Date()
   const date = new Date(birthday)
   return date.getMonth() === today.getMonth() && date.getDate() === today.getDate()
-}
-
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
 }
 
 

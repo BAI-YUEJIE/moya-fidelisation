@@ -1,3 +1,7 @@
+export function formatDate(dateStr: string): string {
+  return dateStr.split('T')[0].split('-').reverse().join('/')
+}
+
 export function getTier(points: number) {
   if (points >= 500) return {
     label: 'Gold' as const,

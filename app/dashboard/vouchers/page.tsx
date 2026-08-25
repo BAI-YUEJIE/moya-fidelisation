@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { formatDate } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
 
 type Voucher = {
@@ -32,9 +33,6 @@ function isValid(v: Voucher): boolean {
   return v.status === 'unused' && !isExpired(v)
 }
 
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
-}
 
 export default function VouchersPage() {
   const router = useRouter()

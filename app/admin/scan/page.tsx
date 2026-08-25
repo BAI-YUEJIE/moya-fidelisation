@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getTier } from '@/lib/utils'
+import { getTier, formatDate } from '@/lib/utils'
 
 type VoucherResult = {
   id: string
@@ -26,9 +26,6 @@ type ScanResult =
   | { kind: 'member'; data: MemberResult }
 
 
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
-}
 
 export default function ScanPage() {
   const [scanning, setScanning] = useState(false)
