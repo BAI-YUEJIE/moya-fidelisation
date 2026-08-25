@@ -198,47 +198,33 @@ export default function AdminRewardsPage() {
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
       <div className="max-w-5xl mx-auto flex flex-col gap-5 animate-fade-in">
 
-        {/* Hero header */}
-        <div className="rounded-3xl p-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1c1917, #292524)' }}>
-          {/* Geometric background pattern */}
-          <svg className="absolute right-0 top-0 opacity-5 pointer-events-none" width="280" height="200" viewBox="0 0 280 200">
-            <circle cx="240" cy="40" r="120" fill="none" stroke="white" strokeWidth="1"/>
-            <circle cx="240" cy="40" r="80" fill="none" stroke="white" strokeWidth="1"/>
-            <circle cx="240" cy="40" r="40" fill="none" stroke="white" strokeWidth="1"/>
-            <line x1="120" y1="0" x2="280" y2="160" stroke="white" strokeWidth="0.5"/>
-            <line x1="160" y1="0" x2="280" y2="120" stroke="white" strokeWidth="0.5"/>
-          </svg>
-
-          <div className="relative flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold tracking-widest uppercase mb-1" style={{ color: '#f08816' }}>Administration</p>
-              <h1 className="text-2xl font-bold text-white">Récompenses</h1>
-              {/* Inline stats */}
-              <div className="flex gap-5 mt-4">
-                <div>
-                  <p className="text-xl font-bold text-white">{stats.total}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Total</p>
-                </div>
-                <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-                <div>
-                  <p className="text-xl font-bold" style={{ color: '#f08816' }}>{stats.echange}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Échanges</p>
-                </div>
-                <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-                <div>
-                  <p className="text-xl font-bold" style={{ color: '#c084fc' }}>{stats.cadeau}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Cadeaux</p>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={openAdd}
-              className="shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold mt-1"
-              style={{ backgroundColor: '#f08816', color: '#ffffff' }}
-            >
-              + Ajouter
-            </button>
+        {/* Header */}
+        <div className="flex items-end justify-between pt-2">
+          <div>
+            <p className="text-sm font-medium" style={{ color: '#9ca3af' }}>Administration</p>
+            <h1 className="text-2xl font-bold text-gray-900 mt-0.5">Récompenses</h1>
           </div>
+          <button
+            onClick={openAdd}
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ backgroundColor: '#f08816', color: '#ffffff' }}
+          >
+            + Ajouter
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'total', value: stats.total, color: undefined },
+            { label: 'échanges', value: stats.echange, color: '#f08816' },
+            { label: 'cadeaux', value: stats.cadeau, color: '#9333ea' },
+          ].map((s, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-sm p-4 text-center">
+              <p className="text-2xl font-bold" style={{ color: s.color ?? '#1c1917' }}>{s.value}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{s.label}</p>
+            </div>
+          ))}
         </div>
 
         {/* Barre de recherche + filtres dropdown */}

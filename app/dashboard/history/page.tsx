@@ -158,10 +158,7 @@ export default function HistoryPage() {
 
         {/* Carte résumé */}
         {profile && (
-          <div
-            className="rounded-2xl p-5 grid grid-cols-3 gap-3"
-            style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)' }}
-          >
+          <div className="rounded-2xl p-5 grid grid-cols-3 gap-3" style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)' }}>
             <div className="text-center">
               <p className="text-2xl font-bold text-white">{profile.points}</p>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>solde actuel</p>

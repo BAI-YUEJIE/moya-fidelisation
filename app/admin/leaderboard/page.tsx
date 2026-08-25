@@ -170,54 +170,27 @@ export default function LeaderboardPage() {
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
       <div className="max-w-4xl mx-auto flex flex-col gap-5 animate-fade-in">
 
-        {/* Hero header */}
-        <div className="rounded-3xl p-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1c1917, #292524)' }}>
-          <svg className="absolute right-0 top-0 opacity-5 pointer-events-none" width="280" height="200" viewBox="0 0 280 200">
-            <circle cx="240" cy="40" r="120" fill="none" stroke="white" strokeWidth="1"/>
-            <circle cx="240" cy="40" r="80"  fill="none" stroke="white" strokeWidth="1"/>
-            <circle cx="240" cy="40" r="40"  fill="none" stroke="white" strokeWidth="1"/>
-            <line x1="120" y1="0" x2="280" y2="160" stroke="white" strokeWidth="0.5"/>
-            <line x1="160" y1="0" x2="280" y2="120" stroke="white" strokeWidth="0.5"/>
-          </svg>
-          <div className="relative">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-1" style={{ color: '#f08816' }}>Administration</p>
-            <h1 className="text-2xl font-bold text-white">Classement</h1>
-            <div className="flex flex-wrap gap-x-5 gap-y-3 mt-4">
-              <div>
-                <p className="text-xl font-bold text-white">{stats.total}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Membres</p>
-              </div>
-              <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-              <div>
-                <p className="text-xl font-bold" style={{ color: '#b45309' }}>{stats.bronze}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Bronze</p>
-              </div>
-              <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-              <div>
-                <p className="text-xl font-bold" style={{ color: '#9ca3af' }}>{stats.silver}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Silver</p>
-              </div>
-              <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-              <div>
-                <p className="text-xl font-bold" style={{ color: '#b8860b' }}>{stats.gold}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Gold</p>
-              </div>
-              <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-              <div>
-                <p className="text-xl font-bold" style={{ color: '#f08816' }}>{stats.totalPoints.toLocaleString()}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Points cumulés</p>
-              </div>
-              {stats.birthdays > 0 && (
-                <>
-                  <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-                  <div>
-                    <p className="text-xl font-bold" style={{ color: '#f08816' }}>{stats.birthdays}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Anniv. aujourd&apos;hui</p>
-                  </div>
-                </>
-              )}
+        {/* Header */}
+        <div className="pt-2">
+          <p className="text-sm font-medium" style={{ color: '#9ca3af' }}>Administration</p>
+          <h1 className="text-2xl font-bold text-gray-900 mt-0.5">Classement</h1>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
+          {[
+            { label: 'membres', value: stats.total, color: undefined },
+            { label: 'Bronze', value: stats.bronze, color: '#b45309' },
+            { label: 'Silver', value: stats.silver, color: '#6b7280' },
+            { label: 'Gold', value: stats.gold, color: '#b8860b' },
+            { label: 'points cumulés', value: stats.totalPoints.toLocaleString(), color: '#f08816' },
+            { label: "anniv. aujourd'hui", value: stats.birthdays, color: stats.birthdays > 0 ? '#f08816' : undefined },
+          ].map((s, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-sm p-4 text-center">
+              <p className="text-2xl font-bold" style={{ color: s.color ?? '#1c1917' }}>{s.value}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{s.label}</p>
             </div>
-          </div>
+          ))}
         </div>
 
         {/* Recherche + filtres */}

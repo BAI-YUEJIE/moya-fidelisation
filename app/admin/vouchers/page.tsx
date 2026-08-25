@@ -229,7 +229,7 @@ export default function AdminVouchersPage() {
         {/* Stats */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'envoyés', value: stats.total },
+            { label: 'envoyés', value: stats.total, color: undefined },
             { label: 'valides', value: stats.unused, color: '#16a34a' },
             { label: 'utilisés', value: stats.used, color: '#6b7280' },
             { label: 'expirés', value: stats.expired, color: '#ef4444' },

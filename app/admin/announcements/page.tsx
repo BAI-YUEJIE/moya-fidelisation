@@ -525,35 +525,29 @@ export default function AdminAnnouncementsPage() {
         </div>
       )}
 
-      {/* ── Hero ── */}
-      <div className="px-4 pt-5 max-w-4xl mx-auto">
-        <div className="relative overflow-hidden rounded-2xl px-6 pt-7 pb-6" style={{ background: 'linear-gradient(135deg, #1c1917, #292524)' }}>
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 600 180" preserveAspectRatio="xMidYMid slice" style={{ opacity: 0.06 }}>
-            <circle cx="520" cy="-20" r="200" fill="none" stroke="white" strokeWidth="1"/>
-            <circle cx="-20" cy="180" r="160" fill="none" stroke="white" strokeWidth="1"/>
-          </svg>
-          <div className="relative">
-            <p className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Admin</p>
-            <h1 className="text-2xl font-bold text-white mb-5">Annonces</h1>
-            <div className="flex gap-5">
-              {[
-                { label: 'Total', value: stats.total, color: 'white' },
-                { label: 'Publiées', value: stats.actives, color: '#16a34a' },
-                { label: 'Programmées', value: stats.programmees, color: '#f08816' },
-                { label: 'Expirées', value: stats.expirees, color: '#ef4444' },
-                { label: 'Inactives', value: stats.inactives, color: '#9ca3af' },
-              ].map(s => (
-                <div key={s.label}>
-                  <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="max-w-4xl mx-auto px-4 pt-5 flex flex-col gap-4">
 
-      <div className="max-w-4xl mx-auto px-4 mt-5 flex flex-col gap-4">
+        {/* Header */}
+        <div className="pt-2">
+          <p className="text-sm font-medium" style={{ color: '#9ca3af' }}>Administration</p>
+          <h1 className="text-2xl font-bold text-gray-900 mt-0.5">Annonces</h1>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-5 gap-3">
+          {[
+            { label: 'total', value: stats.total, color: undefined },
+            { label: 'publiées', value: stats.actives, color: '#16a34a' },
+            { label: 'programmées', value: stats.programmees, color: '#f08816' },
+            { label: 'expirées', value: stats.expirees, color: '#ef4444' },
+            { label: 'inactives', value: stats.inactives, color: '#9ca3af' },
+          ].map((s, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-sm p-4 text-center">
+              <p className="text-2xl font-bold" style={{ color: s.color ?? '#1c1917' }}>{s.value}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
 
         {/* ── Barre d'outils ── */}
         <div className="flex flex-wrap items-center gap-2">
