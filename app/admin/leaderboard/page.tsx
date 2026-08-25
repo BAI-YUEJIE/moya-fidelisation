@@ -241,7 +241,7 @@ export default function LeaderboardPage() {
             {top3.map((member, i) => {
               const tier = getTier(member.points)
               const birthday = isBirthdayToday(member.birthday)
-              const progress = tier.label === 'Gold' ? 100 : Math.round(((member.points - tier.min) / (tier.next - tier.min)) * 100)
+              const progress = tier.label === 'Gold' ? 100 : Math.round(((member.points - tier.min) / (tier.next! - tier.min)) * 100)
               const rs = rankStyle[i]
               return (
                 <div
@@ -295,7 +295,7 @@ export default function LeaderboardPage() {
                   {rest.map((member, i) => {
                     const tier = getTier(member.points)
                     const birthday = isBirthdayToday(member.birthday)
-                    const progress = tier.label === 'Gold' ? 100 : Math.round(((member.points - tier.min) / (tier.next - tier.min)) * 100)
+                    const progress = tier.label === 'Gold' ? 100 : Math.round(((member.points - tier.min) / (tier.next! - tier.min)) * 100)
                     const globalRank = filtered.indexOf(member) + 1
                     return (
                       <tr
