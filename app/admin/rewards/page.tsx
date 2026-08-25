@@ -17,6 +17,7 @@ type Reward = {
   stock: number | null
   description: string | null
   min_tier: string | null
+  validity_days: number | null
 }
 
 type ImageMode = 'url' | 'file'
@@ -33,6 +34,7 @@ const emptyForm = {
   stock: '',
   description: '',
   min_tier: '',
+  validity_days: '',
 }
 
 export default function AdminRewardsPage() {
@@ -58,7 +60,7 @@ export default function AdminRewardsPage() {
     const supabase = createClient()
     const { data } = await supabase
       .from('rewards')
-      .select('id, name, points_cost, image_url, type, visible, start_date, end_date, max_per_member, stock, description, min_tier')
+      .select('id, name, points_cost, image_url, type, visible, start_date, end_date, max_per_member, stock, description, min_tier, validity_days')
       .order('points_cost')
     if (data) setRewards(data)
     setLoading(false)
@@ -93,6 +95,7 @@ export default function AdminRewardsPage() {
       stock: reward.stock?.toString() ?? '',
       description: reward.description ?? '',
       min_tier: reward.min_tier ?? '',
+      validity_days: reward.validity_days?.toString() ?? '',
     })
     setFile(null)
     setPreview(reward.image_url ?? null)
@@ -140,6 +143,7 @@ export default function AdminRewardsPage() {
       stock: form.stock ? parseInt(form.stock) : null,
       description: form.description || null,
       min_tier: form.min_tier || null,
+      validity_days: form.validity_days ? parseInt(form.validity_days) : null,
     }
 
     if (editingId) {
@@ -663,6 +667,22 @@ export default function AdminRewardsPage() {
                 />
               </div>
 
+              {/* Validité du bon */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#9ca3af' }}>
+                  Validité du bon <span className="normal-case font-normal">(jours, optionnel)</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Sans expiration"
+                  value={form.validity_days}
+                  onChange={e => setForm({ ...form, validity_days: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                  style={{ border: '1px solid #f0ebe4', color: '#1c1917' }}
+                />
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -768,6 +788,7 @@ export default function AdminRewardsPage() {
                   detailReward.min_tier ? { label: 'Niveau min.', value: detailReward.min_tier } : null,
                   detailReward.start_date ? { label: 'Disponible dès', value: detailReward.start_date.split('-').reverse().join('/') } : null,
                   detailReward.end_date ? { label: 'Expire le', value: detailReward.end_date.split('-').reverse().join('/') } : null,
+                  detailReward.validity_days !== null ? { label: 'Validité du bon', value: `${detailReward.validity_days} jour${detailReward.validity_days > 1 ? 's' : ''}` } : null,
                 ] as Array<{ label: string; value: string } | null>)
                   .filter((row): row is { label: string; value: string } => row !== null)
                   .map((row, i, arr) => (
