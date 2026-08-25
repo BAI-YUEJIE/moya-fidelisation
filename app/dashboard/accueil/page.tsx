@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { QRCodeSVG } from 'qrcode.react'
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase/client'
 import { getTier } from '@/lib/utils'
 
@@ -57,6 +57,41 @@ export default function AccueilPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [voucherCount, setVoucherCount] = useState(0)
   const [qrExpanded, setQrExpanded] = useState(false)
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  function handleDownload() {
+    if (!qrCanvasRef.current || !profile || !userId) return
+    const tier = getTier(profile.points)
+    const qrSize = 240, padding = 36, headerH = 90, infoH = 70, footerH = 32
+    const totalW = qrSize + padding * 2
+    const totalH = headerH + infoH + qrSize + footerH + padding
+    const canvas = document.createElement('canvas')
+    canvas.width = totalW * 2; canvas.height = totalH * 2
+    const ctx = canvas.getContext('2d')!
+    ctx.scale(2, 2)
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, totalW, totalH)
+    ctx.fillStyle = '#1c1917'; ctx.fillRect(0, 0, totalW, headerH)
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 26px Arial'; ctx.textAlign = 'center'
+    ctx.fillText('MOYA', totalW / 2, 38)
+    ctx.fillStyle = '#f08816'; ctx.font = '500 9px Arial'
+    ctx.fillText('RESTAURANT JAPONAIS', totalW / 2, 56)
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5
+    ctx.beginPath(); ctx.moveTo(padding, 70); ctx.lineTo(totalW - padding, 70); ctx.stroke()
+    ctx.fillStyle = tier.color; ctx.font = '600 10px Arial'
+    ctx.fillText(`● ${tier.label.toUpperCase()}`, totalW / 2, 84)
+    ctx.fillStyle = '#1c1917'; ctx.font = 'bold 17px Arial'
+    ctx.fillText(profile.name, totalW / 2, headerH + 28)
+    ctx.fillStyle = '#9ca3af'; ctx.font = '12px Arial'
+    ctx.fillText(`${profile.points} points`, totalW / 2, headerH + 50)
+    ctx.strokeStyle = '#f0ebe4'; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.moveTo(padding, headerH + 62); ctx.lineTo(totalW - padding, headerH + 62); ctx.stroke()
+    ctx.drawImage(qrCanvasRef.current, padding, headerH + infoH, qrSize, qrSize)
+    ctx.fillStyle = '#d1d5db'; ctx.font = '10px Arial'
+    ctx.fillText('Présentez ce QR code au restaurant', totalW / 2, headerH + infoH + qrSize + footerH - 10)
+    const link = document.createElement('a')
+    link.download = `moya-${profile.name.replace(/\s+/g, '-').toLowerCase()}.png`
+    link.href = canvas.toDataURL('image/png'); link.click()
+  }
   const [selectedIdx, setSelectedIdx] = useState(() => {
     if (typeof window === 'undefined') return 0
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -116,6 +151,12 @@ export default function AccueilPage() {
 
   return (
     <div className="min-h-screen pb-12" style={{ background: '#f5f3f0' }}>
+      {/* Canvas caché pour le téléchargement */}
+      {userId && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+          <QRCodeCanvas value={userId} size={240} ref={qrCanvasRef} />
+        </div>
+      )}
 
       {/* Modal QR code plein écran */}
       {qrExpanded && userId && (
@@ -139,13 +180,22 @@ export default function AccueilPage() {
             <div className="p-4 rounded-2xl" style={{ border: '2px solid #f0ebe4' }}>
               <QRCodeSVG value={userId} size={220} />
             </div>
-            <button
-              onClick={() => setQrExpanded(false)}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ backgroundColor: '#f5f3f0', color: '#6b7280' }}
-            >
-              Fermer
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDownload}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ backgroundColor: '#f08816', color: '#ffffff' }}
+              >
+                Télécharger
+              </button>
+              <button
+                onClick={() => setQrExpanded(false)}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ backgroundColor: '#f5f3f0', color: '#6b7280' }}
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -205,13 +255,13 @@ export default function AccueilPage() {
         <div className="grid grid-cols-3 gap-2">
           {[
             {
-              label: 'Mon espace',
-              href: '/dashboard',
+              label: 'Mon profil',
+              href: '/dashboard/profile',
               badge: null,
               icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f08816" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
                 </svg>
               ),
             },

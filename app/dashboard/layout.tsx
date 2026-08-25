@@ -39,7 +39,6 @@ function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
 
   const navItems = [
     { label: 'Accueil', href: '/dashboard/accueil' },
-    { label: 'Mon espace', href: '/dashboard' },
     { label: 'Récompenses', href: '/dashboard/rewards' },
     { label: 'Mes bons', href: '/dashboard/vouchers' },
     { label: 'Historique', href: '/dashboard/history' },
