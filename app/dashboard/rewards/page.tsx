@@ -15,6 +15,7 @@ type Reward = {
   stock: number | null
   max_per_member: number | null
   min_tier: string | null
+  validity_days: number | null
 }
 
 type Profile = {
@@ -64,7 +65,7 @@ export default function RewardsPage() {
     const [{ data: profileData }, { data: rewardsData }, { data: vouchersData }, { count: unusedCount }] = await Promise.all([
       supabase.from('profiles').select('id, points').eq('id', user.id).single(),
       supabase.from('rewards')
-        .select('id, name, points_cost, image_url, description, stock, max_per_member, min_tier')
+        .select('id, name, points_cost, image_url, description, stock, max_per_member, min_tier, validity_days')
         .eq('type', 'échange')
         .eq('visible', true)
         .or(`start_date.is.null,start_date.lte.${today}`)
@@ -120,9 +121,13 @@ export default function RewardsPage() {
 
     const newPoints = profile.points - reward.points_cost
 
+    const expiresAt = reward.validity_days
+      ? new Date(Date.now() + reward.validity_days * 24 * 60 * 60 * 1000).toISOString()
+      : null
+
     await Promise.all([
       supabase.from('profiles').update({ points: newPoints }).eq('id', profile.id),
-      supabase.from('vouchers').insert({ user_id: profile.id, reward_id: reward.id, type: 'redemption' }),
+      supabase.from('vouchers').insert({ user_id: profile.id, reward_id: reward.id, type: 'redemption', expires_at: expiresAt }),
       supabase.from('points_history').insert({ user_id: profile.id, amount: -reward.points_cost, reason: 'échange', description: reward.name }),
       ...(reward.stock !== null ? [supabase.from('rewards').update({ stock: reward.stock - 1 }).eq('id', reward.id)] : []),
     ])
