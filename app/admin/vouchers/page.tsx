@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier } from '@/lib/utils'
 
 type Reward = { id: string; name: string }
 
@@ -24,11 +25,6 @@ function formatDate(dateStr: string): string {
   return dateStr.split('T')[0].split('-').reverse().join('/')
 }
 
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', bg: 'rgba(184,134,11,0.1)' }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' }
-  return { label: 'Bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)' }
-}
 
 function isExpired(v: Voucher): boolean {
   return v.status === 'unused' && v.expires_at !== null && new Date(v.expires_at) < new Date()
