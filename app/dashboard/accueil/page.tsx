@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase/client'
 import { getTier } from '@/lib/utils'
-
-type Profile = { name: string; points: number }
+import { useUser } from '../user-context'
 type Announcement = {
   id: string
   title: string
@@ -52,16 +51,15 @@ const RESTAURANTS = [
 const STORAGE_KEY = 'moya_selected_restaurant'
 
 export default function AccueilPage() {
-  const [userId, setUserId] = useState<string | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { userId, userName, points } = useUser()
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [voucherCount, setVoucherCount] = useState(0)
   const [qrExpanded, setQrExpanded] = useState(false)
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)
 
   function handleDownload() {
-    if (!qrCanvasRef.current || !profile || !userId) return
-    const tier = getTier(profile.points)
+    if (!qrCanvasRef.current || !userId || !userName) return
+    const tier = getTier(points)
     const qrSize = 240, padding = 36, headerH = 90, infoH = 70, footerH = 32
     const totalW = qrSize + padding * 2
     const totalH = headerH + infoH + qrSize + footerH + padding
@@ -80,16 +78,16 @@ export default function AccueilPage() {
     ctx.fillStyle = tier.color; ctx.font = '600 10px Arial'
     ctx.fillText(`● ${tier.label.toUpperCase()}`, totalW / 2, 84)
     ctx.fillStyle = '#1c1917'; ctx.font = 'bold 17px Arial'
-    ctx.fillText(profile.name, totalW / 2, headerH + 28)
+    ctx.fillText(userName, totalW / 2, headerH + 28)
     ctx.fillStyle = '#9ca3af'; ctx.font = '12px Arial'
-    ctx.fillText(`${profile.points} points`, totalW / 2, headerH + 50)
+    ctx.fillText(`${points} points`, totalW / 2, headerH + 50)
     ctx.strokeStyle = '#f0ebe4'; ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(padding, headerH + 62); ctx.lineTo(totalW - padding, headerH + 62); ctx.stroke()
     ctx.drawImage(qrCanvasRef.current, padding, headerH + infoH, qrSize, qrSize)
     ctx.fillStyle = '#d1d5db'; ctx.font = '10px Arial'
     ctx.fillText('Présentez ce QR code au restaurant', totalW / 2, headerH + infoH + qrSize + footerH - 10)
     const link = document.createElement('a')
-    link.download = `moya-${profile.name.replace(/\s+/g, '-').toLowerCase()}.png`
+    link.download = `moya-${userName.replace(/\s+/g, '-').toLowerCase()}.png`
     link.href = canvas.toDataURL('image/png'); link.click()
   }
   const [selectedIdx, setSelectedIdx] = useState(() => {
@@ -108,23 +106,19 @@ export default function AccueilPage() {
   }
 
   useEffect(() => {
+    if (!userId) return
     async function load() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setUserId(user.id)
-      const [{ data: profileData }, { data: announcementsData }, { count }] = await Promise.all([
-        supabase.from('profiles').select('name, points').eq('id', user.id).single(),
+      const [{ data: announcementsData }, { count }] = await Promise.all([
         supabase.from('announcements').select('id, title, body, image_url, created_at, restaurant, pinned, publish_at, expires_at').eq('active', true).or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`).or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
-        supabase.from('vouchers').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'unused'),
+        supabase.from('vouchers').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'unused'),
       ])
-      if (profileData) setProfile(profileData)
       if (announcementsData) setAnnouncements(announcementsData)
       setVoucherCount(count ?? 0)
       setLoading(false)
     }
     load()
-  }, [])
+  }, [userId])
 
   if (loading) {
     return (
@@ -141,8 +135,8 @@ export default function AccueilPage() {
     )
   }
 
-  const tier = profile ? getTier(profile.points) : null
-  const progressPct = tier?.next ? Math.min(100, Math.round((profile!.points / tier.next) * 100)) : 100
+  const tier = getTier(points)
+  const progressPct = tier.next ? Math.min(100, Math.round((points / tier.next) * 100)) : 100
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
   const selected = RESTAURANTS[selectedIdx]
@@ -219,11 +213,11 @@ export default function AccueilPage() {
           <div className="relative flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-sm mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{greeting},</p>
-              <h1 className="text-2xl font-bold text-white mb-3">{profile?.name ?? '—'}</h1>
-              {profile && tier && (
+              <h1 className="text-2xl font-bold text-white mb-3">{userName || '—'}</h1>
+              {userName && (
                 <>
                   <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-3xl font-bold" style={{ color: '#f08816' }}>{profile.points}</span>
+                    <span className="text-3xl font-bold" style={{ color: '#f08816' }}>{points}</span>
                     <span className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>points</span>
                     <span className="ml-1 text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: `${tier.color}25`, color: tier.color, border: `1px solid ${tier.color}40` }}>
@@ -236,7 +230,7 @@ export default function AccueilPage() {
                         <div className="h-full rounded-full animate-progress" style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #f08816, #f5a623)' }} />
                       </div>
                       <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        {tier.next - profile.points} pts avant le niveau {tier.nextLabel}
+                        {tier.next - points} pts avant le niveau {tier.nextLabel}
                       </p>
                     </>
                   ) : (

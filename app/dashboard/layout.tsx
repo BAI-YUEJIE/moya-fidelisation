@@ -8,7 +8,7 @@ import { UserProvider, useUser } from './user-context'
 
 function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter()
-  const { userName, setUserName } = useUser()
+  const { userName, setUserName, setUserId, setPoints } = useUser()
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -19,17 +19,19 @@ function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
 
       const { data } = await supabase
         .from('profiles')
-        .select('name, is_admin')
+        .select('name, is_admin, points')
         .eq('id', user.id)
         .single()
 
       if (data) {
+        setUserId(user.id)
         setUserName(data.name)
         setIsAdmin(data.is_admin)
+        setPoints(data.points)
       }
     }
     load()
-  }, [router, setUserName])
+  }, [router, setUserId, setUserName, setPoints])
 
   async function handleLogout() {
     const supabase = createClient()
