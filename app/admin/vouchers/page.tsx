@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier, formatDate } from '@/lib/utils'
 
 type Reward = { id: string; name: string }
 
@@ -20,15 +21,7 @@ type Voucher = {
 
 type Step = 1 | 2
 
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
-}
 
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', bg: 'rgba(184,134,11,0.1)' }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' }
-  return { label: 'Bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)' }
-}
 
 function isExpired(v: Voucher): boolean {
   return v.status === 'unused' && v.expires_at !== null && new Date(v.expires_at) < new Date()
@@ -191,8 +184,12 @@ export default function AdminVouchersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-5xl mx-auto flex flex-col gap-5">
+          <div className="skeleton h-10 w-40 rounded-xl" />
+          <div className="skeleton h-10 rounded-xl" />
+          <div className="skeleton h-64 rounded-2xl" />
+        </div>
       </div>
     )
   }
@@ -205,7 +202,7 @@ export default function AdminVouchersPage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-5xl mx-auto flex flex-col gap-5">
+      <div className="max-w-5xl mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Header */}
         <div className="flex items-end justify-between pt-2">
@@ -225,7 +222,7 @@ export default function AdminVouchersPage() {
         {/* Stats */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'envoyés', value: stats.total },
+            { label: 'envoyés', value: stats.total, color: undefined },
             { label: 'valides', value: stats.unused, color: '#16a34a' },
             { label: 'utilisés', value: stats.used, color: '#6b7280' },
             { label: 'expirés', value: stats.expired, color: '#ef4444' },

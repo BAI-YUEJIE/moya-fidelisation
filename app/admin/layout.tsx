@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar'
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [userName, setUserName] = useState('')
+  const [authorized, setAuthorized] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -21,8 +22,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         .eq('id', user.id)
         .single()
 
-      if (!data?.is_admin) { router.push('/dashboard'); return }
+      if (!data?.is_admin) { router.push('/dashboard/accueil'); return }
       setUserName(data.name)
+      setAuthorized(true)
     }
     load()
   }, [router])
@@ -46,6 +48,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Se déconnecter', onClick: handleLogout },
   ]
+
+  if (!authorized) return null
 
   return (
     <div className="min-h-screen" style={{ background: '#f5f3f0' }}>

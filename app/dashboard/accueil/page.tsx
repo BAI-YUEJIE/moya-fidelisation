@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { QRCodeSVG } from 'qrcode.react'
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase/client'
-
-type Profile = { name: string; points: number }
+import { getTier } from '@/lib/utils'
+import { useUser } from '../user-context'
 type Announcement = {
   id: string
   title: string
@@ -16,12 +16,6 @@ type Announcement = {
   pinned: boolean
   publish_at: string | null
   expires_at: string | null
-}
-
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', next: null, nextLabel: null }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', next: 500, nextLabel: 'Gold' }
-  return { label: 'Bronze', color: '#b45309', next: 200, nextLabel: 'Silver' }
 }
 
 const RESTAURANTS = [
@@ -57,11 +51,45 @@ const RESTAURANTS = [
 const STORAGE_KEY = 'moya_selected_restaurant'
 
 export default function AccueilPage() {
-  const [userId, setUserId] = useState<string | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { userId, userName, points } = useUser()
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [voucherCount, setVoucherCount] = useState(0)
   const [qrExpanded, setQrExpanded] = useState(false)
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  function handleDownload() {
+    if (!qrCanvasRef.current || !userId || !userName) return
+    const tier = getTier(points)
+    const qrSize = 240, padding = 36, headerH = 90, infoH = 70, footerH = 32
+    const totalW = qrSize + padding * 2
+    const totalH = headerH + infoH + qrSize + footerH + padding
+    const canvas = document.createElement('canvas')
+    canvas.width = totalW * 2; canvas.height = totalH * 2
+    const ctx = canvas.getContext('2d')!
+    ctx.scale(2, 2)
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, totalW, totalH)
+    ctx.fillStyle = '#1c1917'; ctx.fillRect(0, 0, totalW, headerH)
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 26px Arial'; ctx.textAlign = 'center'
+    ctx.fillText('MOYA', totalW / 2, 38)
+    ctx.fillStyle = '#f08816'; ctx.font = '500 9px Arial'
+    ctx.fillText('RESTAURANT JAPONAIS', totalW / 2, 56)
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5
+    ctx.beginPath(); ctx.moveTo(padding, 70); ctx.lineTo(totalW - padding, 70); ctx.stroke()
+    ctx.fillStyle = tier.color; ctx.font = '600 10px Arial'
+    ctx.fillText(`● ${tier.label.toUpperCase()}`, totalW / 2, 84)
+    ctx.fillStyle = '#1c1917'; ctx.font = 'bold 17px Arial'
+    ctx.fillText(userName, totalW / 2, headerH + 28)
+    ctx.fillStyle = '#9ca3af'; ctx.font = '12px Arial'
+    ctx.fillText(`${points} points`, totalW / 2, headerH + 50)
+    ctx.strokeStyle = '#f0ebe4'; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.moveTo(padding, headerH + 62); ctx.lineTo(totalW - padding, headerH + 62); ctx.stroke()
+    ctx.drawImage(qrCanvasRef.current, padding, headerH + infoH, qrSize, qrSize)
+    ctx.fillStyle = '#d1d5db'; ctx.font = '10px Arial'
+    ctx.fillText('Présentez ce QR code au restaurant', totalW / 2, headerH + infoH + qrSize + footerH - 10)
+    const link = document.createElement('a')
+    link.download = `moya-${userName.replace(/\s+/g, '-').toLowerCase()}.png`
+    link.href = canvas.toDataURL('image/png'); link.click()
+  }
   const [selectedIdx, setSelectedIdx] = useState(() => {
     if (typeof window === 'undefined') return 0
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -78,34 +106,37 @@ export default function AccueilPage() {
   }
 
   useEffect(() => {
+    if (!userId) return
     async function load() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setUserId(user.id)
-      const [{ data: profileData }, { data: announcementsData }, { count }] = await Promise.all([
-        supabase.from('profiles').select('name, points').eq('id', user.id).single(),
+      const [{ data: announcementsData }, { count }] = await Promise.all([
         supabase.from('announcements').select('id, title, body, image_url, created_at, restaurant, pinned, publish_at, expires_at').eq('active', true).or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`).or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
-        supabase.from('vouchers').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'unused'),
+        supabase.from('vouchers').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'unused'),
       ])
-      if (profileData) setProfile(profileData)
       if (announcementsData) setAnnouncements(announcementsData)
       setVoucherCount(count ?? 0)
       setLoading(false)
     }
     load()
-  }, [])
+  }, [userId])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f5f3f0' }}>
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen pb-12" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-4">
+          <div className="skeleton h-40 rounded-2xl" />
+          <div className="grid grid-cols-3 gap-2">
+            {[0,1,2].map(i => <div key={i} className="skeleton h-20 rounded-2xl" />)}
+          </div>
+          <div className="skeleton h-36 rounded-2xl" />
+          <div className="skeleton h-28 rounded-2xl" />
+        </div>
       </div>
     )
   }
 
-  const tier = profile ? getTier(profile.points) : null
-  const progressPct = tier?.next ? Math.min(100, Math.round((profile!.points / tier.next) * 100)) : 100
+  const tier = getTier(points)
+  const progressPct = tier.next ? Math.min(100, Math.round((points / tier.next) * 100)) : 100
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
   const selected = RESTAURANTS[selectedIdx]
@@ -121,6 +152,12 @@ export default function AccueilPage() {
 
   return (
     <div className="min-h-screen pb-12" style={{ background: '#f5f3f0' }}>
+      {/* Canvas caché pour le téléchargement */}
+      {userId && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+          <QRCodeCanvas value={userId} size={240} ref={qrCanvasRef} />
+        </div>
+      )}
 
       {/* Modal QR code plein écran */}
       {qrExpanded && userId && (
@@ -144,18 +181,27 @@ export default function AccueilPage() {
             <div className="p-4 rounded-2xl" style={{ border: '2px solid #f0ebe4' }}>
               <QRCodeSVG value={userId} size={220} />
             </div>
-            <button
-              onClick={() => setQrExpanded(false)}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ backgroundColor: '#f5f3f0', color: '#6b7280' }}
-            >
-              Fermer
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDownload}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ backgroundColor: '#f08816', color: '#ffffff' }}
+              >
+                Télécharger
+              </button>
+              <button
+                onClick={() => setQrExpanded(false)}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ backgroundColor: '#f5f3f0', color: '#6b7280' }}
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-4">
+      <div className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-4 animate-fade-in">
 
         {/* ── Hero card ── */}
         <div className="relative overflow-hidden rounded-2xl px-5 py-6" style={{ background: 'linear-gradient(135deg, #1c1917, #292524)' }}>
@@ -167,11 +213,11 @@ export default function AccueilPage() {
           <div className="relative flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-sm mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{greeting},</p>
-              <h1 className="text-2xl font-bold text-white mb-3">{profile?.name ?? '—'}</h1>
-              {profile && tier && (
+              <h1 className="text-2xl font-bold text-white mb-3">{userName || '—'}</h1>
+              {userName && (
                 <>
                   <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-3xl font-bold" style={{ color: '#f08816' }}>{profile.points}</span>
+                    <span className="text-3xl font-bold" style={{ color: '#f08816' }}>{points}</span>
                     <span className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>points</span>
                     <span className="ml-1 text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: `${tier.color}25`, color: tier.color, border: `1px solid ${tier.color}40` }}>
@@ -181,10 +227,10 @@ export default function AccueilPage() {
                   {tier.next !== null ? (
                     <>
                       <div className="h-1 rounded-full overflow-hidden mb-1.5" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #f08816, #f5a623)' }} />
+                        <div className="h-full rounded-full animate-progress" style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #f08816, #f5a623)' }} />
                       </div>
                       <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        {tier.next - profile.points} pts avant le niveau {tier.nextLabel}
+                        {tier.next - points} pts avant le niveau {tier.nextLabel}
                       </p>
                     </>
                   ) : (
@@ -210,13 +256,13 @@ export default function AccueilPage() {
         <div className="grid grid-cols-3 gap-2">
           {[
             {
-              label: 'Mon espace',
-              href: '/dashboard',
+              label: 'Mon profil',
+              href: '/dashboard/profile',
               badge: null,
               icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f08816" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
                 </svg>
               ),
             },

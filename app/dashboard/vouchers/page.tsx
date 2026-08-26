@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { formatDate } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
 
 type Voucher = {
@@ -32,9 +33,6 @@ function isValid(v: Voucher): boolean {
   return v.status === 'unused' && !isExpired(v)
 }
 
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
-}
 
 export default function VouchersPage() {
   const router = useRouter()
@@ -90,8 +88,13 @@ export default function VouchersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-2xl mx-auto flex flex-col gap-5">
+          <div className="skeleton h-10 w-40 rounded-xl" />
+          <div className="flex flex-col gap-3">
+            {[0,1,2,3].map(i => <div key={i} className="skeleton h-24 rounded-2xl" />)}
+          </div>
+        </div>
       </div>
     )
   }
@@ -104,7 +107,7 @@ export default function VouchersPage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-2xl mx-auto flex flex-col gap-5">
+      <div className="max-w-2xl mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Header */}
         <div className="flex items-end justify-between pt-2">

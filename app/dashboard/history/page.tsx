@@ -128,8 +128,14 @@ export default function HistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-2xl mx-auto flex flex-col gap-5">
+          <div className="skeleton h-10 w-40 rounded-xl" />
+          <div className="skeleton h-10 rounded-xl" />
+          <div className="flex flex-col gap-3">
+            {[0,1,2,3,4].map(i => <div key={i} className="skeleton h-16 rounded-2xl" />)}
+          </div>
+        </div>
       </div>
     )
   }
@@ -142,7 +148,7 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-2xl mx-auto flex flex-col gap-5">
+      <div className="max-w-2xl mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Header */}
         <div className="pt-2">
@@ -152,10 +158,7 @@ export default function HistoryPage() {
 
         {/* Carte résumé */}
         {profile && (
-          <div
-            className="rounded-2xl p-5 grid grid-cols-3 gap-3"
-            style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)' }}
-          >
+          <div className="rounded-2xl p-5 grid grid-cols-3 gap-3" style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)' }}>
             <div className="text-center">
               <p className="text-2xl font-bold text-white">{profile.points}</p>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>solde actuel</p>

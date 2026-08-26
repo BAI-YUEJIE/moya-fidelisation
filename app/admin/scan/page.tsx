@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier, formatDate } from '@/lib/utils'
 
 type VoucherResult = {
   id: string
@@ -24,15 +25,7 @@ type ScanResult =
   | { kind: 'voucher'; data: VoucherResult }
   | { kind: 'member'; data: MemberResult }
 
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', bg: 'rgba(184,134,11,0.1)' }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' }
-  return { label: 'Bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)' }
-}
 
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
-}
 
 export default function ScanPage() {
   const [scanning, setScanning] = useState(false)
@@ -156,7 +149,7 @@ export default function ScanPage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-md mx-auto flex flex-col gap-5">
+      <div className="max-w-md mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Header */}
         <div className="pt-2">

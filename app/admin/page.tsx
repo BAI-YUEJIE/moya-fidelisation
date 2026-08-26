@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getTier, formatDate } from '@/lib/utils'
 
 type Member = {
   id: string
@@ -24,15 +25,6 @@ function isBirthdayToday(birthday: string): boolean {
   return date.getMonth() === today.getMonth() && date.getDate() === today.getDate()
 }
 
-function formatDate(dateStr: string): string {
-  return dateStr.split('T')[0].split('-').reverse().join('/')
-}
-
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', bg: 'rgba(184,134,11,0.1)' }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' }
-  return { label: 'Bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)' }
-}
 
 export default function AdminPage() {
   const [members, setMembers] = useState<Member[]>([])
@@ -102,15 +94,22 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-5xl mx-auto flex flex-col gap-5">
+          <div className="skeleton h-10 w-40 rounded-xl pt-2" />
+          <div className="grid grid-cols-3 gap-3">
+            {[0,1,2].map(i => <div key={i} className="skeleton h-20 rounded-2xl" />)}
+          </div>
+          <div className="skeleton h-10 rounded-xl" />
+          <div className="skeleton h-64 rounded-2xl" />
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-5xl mx-auto flex flex-col gap-5">
+      <div className="max-w-5xl mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Header */}
         <div className="pt-2">

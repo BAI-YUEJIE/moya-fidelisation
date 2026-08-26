@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Sidebar from '@/components/Sidebar'
+import BottomNav from '@/components/BottomNav'
 import { UserProvider, useUser } from './user-context'
 
 function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter()
-  const { userName, setUserName } = useUser()
+  const { userName, setUserName, setUserId, setPoints } = useUser()
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -19,17 +20,19 @@ function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
 
       const { data } = await supabase
         .from('profiles')
-        .select('name, is_admin')
+        .select('name, is_admin, points')
         .eq('id', user.id)
         .single()
 
       if (data) {
+        setUserId(user.id)
         setUserName(data.name)
         setIsAdmin(data.is_admin)
+        setPoints(data.points)
       }
     }
     load()
-  }, [router, setUserName])
+  }, [router, setUserId, setUserName, setPoints])
 
   async function handleLogout() {
     const supabase = createClient()
@@ -39,7 +42,6 @@ function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
 
   const navItems = [
     { label: 'Accueil', href: '/dashboard/accueil' },
-    { label: 'Mon espace', href: '/dashboard' },
     { label: 'Récompenses', href: '/dashboard/rewards' },
     { label: 'Mes bons', href: '/dashboard/vouchers' },
     { label: 'Historique', href: '/dashboard/history' },
@@ -54,9 +56,10 @@ function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="min-h-screen" style={{ background: '#f5f3f0' }}>
       <Sidebar userName={userName} navItems={navItems} bottomItems={bottomItems} />
-      <main className="lg:pl-56 pt-14 lg:pt-0">
+      <main className="lg:pl-56 pt-14 lg:pt-0 pb-16 lg:pb-0">
         {children}
       </main>
+      <BottomNav />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '../user-context'
+import { getTier } from '@/lib/utils'
 
 type ProfileData = {
   name: string
@@ -13,11 +14,6 @@ type ProfileData = {
   email: string
 }
 
-function getTier(points: number) {
-  if (points >= 500) return { label: 'Gold', color: '#b8860b', next: null, min: 500, max: 500 }
-  if (points >= 200) return { label: 'Silver', color: '#6b7280', next: 500, min: 200, max: 500 }
-  return { label: 'Bronze', color: '#b45309', next: 200, min: 0, max: 200 }
-}
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '—'
@@ -128,8 +124,19 @@ export default function ProfilePage() {
 
   if (loading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm" style={{ color: '#9ca3af' }}>Chargement...</p>
+      <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
+        <div className="max-w-lg mx-auto flex flex-col gap-5">
+          <div className="flex items-center gap-4 pt-2">
+            <div className="skeleton w-16 h-16 rounded-2xl shrink-0" />
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="skeleton h-5 w-40 rounded-lg" />
+              <div className="skeleton h-3 w-24 rounded-lg" />
+            </div>
+          </div>
+          <div className="skeleton h-24 rounded-2xl" />
+          <div className="skeleton h-28 rounded-2xl" />
+          <div className="skeleton h-16 rounded-2xl" />
+        </div>
       </div>
     )
   }
@@ -141,7 +148,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen p-5 lg:p-8" style={{ background: '#f5f3f0' }}>
-      <div className="max-w-lg mx-auto flex flex-col gap-5">
+      <div className="max-w-lg mx-auto flex flex-col gap-5 animate-fade-in">
 
         {/* Avatar + nom + niveau */}
         <div className="pt-2 flex items-center gap-4">
@@ -168,7 +175,7 @@ export default function ProfilePage() {
               <div className="mt-2">
                 <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#f0ebe4' }}>
                   <div
-                    className="h-1 rounded-full"
+                    className="h-1 rounded-full animate-progress"
                     style={{ width: `${progress}%`, backgroundColor: '#f08816' }}
                   />
                 </div>
