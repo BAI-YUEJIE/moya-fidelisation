@@ -192,14 +192,17 @@ export default function Sidebar({ userName, navItems, bottomItems }: Props) {
       </header>
 
       {/* Mobile drawer */}
-      {open && (
-        <>
-          <div className="lg:hidden fixed inset-0 z-40 bg-black/40" onClick={() => setOpen(false)} />
-          <aside className="lg:hidden fixed inset-y-0 left-0 z-50 w-56 shadow-2xl">
-            {sidebarContent}
-          </aside>
-        </>
-      )}
+      <div
+        className="lg:hidden fixed inset-0 z-40 bg-black/40 transition-opacity duration-300"
+        style={{ opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none' }}
+        onClick={() => setOpen(false)}
+      />
+      <aside
+        className="lg:hidden fixed inset-y-0 left-0 z-50 w-56 shadow-2xl transition-transform duration-300 ease-in-out"
+        style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)' }}
+      >
+        {sidebarContent}
+      </aside>
     </>
   )
 }
