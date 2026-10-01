@@ -42,6 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Scanner', href: '/admin/scan' },
     { label: 'Classement', href: '/admin/leaderboard' },
     { label: 'Annonces', href: '/admin/announcements' },
+    { label: 'Statistiques', href: '/admin/stats' },
   ]
 
   const bottomItems = [
